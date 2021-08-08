@@ -89,7 +89,7 @@ The shared buffer should hold 1024 domain names (approximately 250 KB when full)
 
 ### Synchronization and Deadlock
 
-Your application must synchronize access to shared resources and avoid any deadlock or busy wait. You should use mutexes, semaphores, and/or condition variables to meet this requirement. There are at least three shared resources that must be protected: the shared array, parsing log, and conversion log. None of these resources is thread-safe by default.
+Your application must synchronize access to shared resources and avoid any deadlock or busy wait. You should use mutexes, semaphores, and/or condition variables to meet this requirement. There are at least three shared resources that must be protected: the shared array, parsing log, and conversion log. None of these resources are thread-safe by default.
 
 ### Termination
 
@@ -182,7 +182,7 @@ If you are concerned about losing points here, then you should meet with your in
 
 ### I/O Formatting (10 points)
 
-If you do not adhere to the input and output formatting conventions, then you will lose points. You are provided a black-box executable that is a perfect solution, so there should be no ambiguity on the desired input and output.  If you leave debug print statements uncommented in your submission, then you will lose all 10 of these points. 
+If you do not adhere to the input and output formatting conventions, then you will lose points. You are provided with sample input and output, so there should be no ambiguity on the desired input and output.  If you leave debug print statements uncommented in your submission, then you will lose all 10 of these points. 
 
 If you are concerned about losing points here, you may run a <tt>diff</tt> on your output versus the black-box's output to be sure your output exactly matches (whitespace and all).
 
