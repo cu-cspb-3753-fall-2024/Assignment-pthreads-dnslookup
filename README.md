@@ -85,7 +85,7 @@ If a `converter` thread tries to read from the buffer but finds that it is empty
 
 ### The Bounded Buffer
 
-The shared buffer should hold 1024 domain names (approximately 250 KB when full). Consult your data-structures and algorithms notes and think about what abstract data type is most appropriate for a shared bounded buffer.    
+The shared buffer should hold 1024 domain names (approximately 250 KB when full). Consult your data-structures and algorithms notes and think about what abstract data type is most appropriate for a shared bounded buffer. You will lose 8 points if your buffer holds more than 1024 domain names.
 
 ### Synchronization and Deadlock
 
