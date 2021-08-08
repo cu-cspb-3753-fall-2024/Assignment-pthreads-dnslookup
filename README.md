@@ -64,7 +64,7 @@ DESCRIPTION
 
 ### Data Files
 
-Your application will take as parameters on the command line, a set of name files to be processed. Each file contains one domain name per line. As per RFC1035 (https://www.ietf.org/rfc/rfc1035.txt), each domain name is at most 253 characters long. Initially, you should design your application so that each name file is assigned a single `parser` thread, noting that the number of `parser` threads may be less than, or more than, the number of input name files. This can cause load balancing issues if one of the input name files is substantially larger than the others. To receive full marks you will need to perform better load balancing (see Step 7 of the Checkpoints section).
+Your application will take as parameters on the command line, a set of name files to be processed. Each file contains one domain name per line. As per RFC1035 (https://www.ietf.org/rfc/rfc1035.txt), each domain name is at most 253 characters long. Initially, you should design your application so that each name file is assigned a single `parser` thread, noting that the number of `parser` threads may be less than, or more than, the number of input name files. Note that this can cause load balancing issues if one of the input name files is substantially larger than the others. To receive full marks you will need to perform better load balancing (see Step 7 of the Checkpoints section).
 
 ### Parser Threads and Log
 
@@ -85,7 +85,7 @@ If a `converter` thread tries to read from the buffer but finds that it is empty
 
 ### The Bounded Buffer
 
-The shared buffer should hold 4096 domain names (approximately 1 MB when full). Consult your data-structures and algorithms notes and think about what abstract data type is most appropriate for a shared bounded buffer.    
+The shared buffer should hold 1024 domain names (approximately 250 KB when full). Consult your data-structures and algorithms notes and think about what abstract data type is most appropriate for a shared bounded buffer.    
 
 ### Synchronization and Deadlock
 
@@ -116,7 +116,7 @@ Some files are included with this assignment for your benefit. You are not requi
 
 - `util.c` and `util.h` These two files contain the DNS lookup utility function. This function abstracts away a lot of the complexity involved with performing a DNS lookup. The function accepts a domain name as input and generates a corresponding dot-formatted IPv4 IP address string as output. Please consult the `util.h` header file for more detailed descriptions of each available function.
 
-- `input/names*.txt` This is a set of sample name files. They follow the same format as mentioned earlier. Use them to test your program.
+- `input/names*.txt` This is a set of sample name files. They follow the same format as mentioned earlier. Use them to test your program. If you are looking for more test data, OpenDNS hosts a large list of domain names https://github.com/opendns/public-domain-lists (caution: unfortunately some of these domain names are NSFW).
 
 - `results-ref.txt` This result file is a sample output of the IPs for the domain names from the names1.txt file. Note that these results will most likely be different than your results, as IP addresses associated to domain names change and are not in one-to-one correspondence.
 
@@ -166,7 +166,7 @@ You must combine your files into a single zip archive ``<Lastname>_multi-lookup.
 - `multi-lookup.c` Your program, conforming to the above requirements.
 - `multi-lookup.h` A header file containing prototypes for any function you write as part of your program.
 - `Makefile` A makefile that builds your program as the default target. It should also contain a “clean” target that will remove any files generated during the course of building and/or running your program.
-- `README` A readme describing how to build and run your program.
+- `README` (Optional) A readme describing how to build and run your program. You may also include any notes about your solution that you would like the instructor(s) to see.
 
 You will lose 5 points if this file is not named correctly or if there is anything else contained in this zip file, e.g., any folders, input data, output data.
 
