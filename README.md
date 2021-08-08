@@ -1,6 +1,6 @@
 # Multithreaded DNS Lookup
 
-Your task is to design a multithreaded userspace application ``multi-lookup`` that reads domain names from a series of input files and resolves the IP addresses of each of domain name. Networking protocols require IP addresses to be able to deliver messages to servers across a network, thus any human-readable domain name for a server (e.g., google.com) must be translated into an IP address. Your application will perform this task and create a single file containing the converted data.  
+Your task is to design a multithreaded userspace application ``multi-lookup`` that reads domain names from a set of input files and resolves the IP addresses of each domain name. Networking protocols require IP addresses to be able to deliver messages to servers across a network, thus any human-readable domain name for a server (e.g., google.com) must be translated into an IP address. Your application will perform this task and create a single file containing the converted data.  
 
 Each line of each file of the input data must be parsed to extract the domain names. Once a domain name has been extracted, it will need to be resolved. You are provided with source code for a function that can take a domain name and return an IPv4 address of the form ``xxx.xxx.xxx.xxx.``, which you must write to a file.
 
