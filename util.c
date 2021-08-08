@@ -1,11 +1,9 @@
 /*
  * File: util.c
- * Author: Andy Sayler
- * Modified: Shiv Mishra
+ * Author: David Knox (based on Andy Sayler original)
  * Project: CSCI 3753 Programming Assignment 3
- * Create Date: 2012/02/01
- * Modify Date: 2012/02/01
- * Modify Date: 2016/09/26
+ * Create Date: 2020/02/28
+ * Modify Date: 2020/02/29  Return the first IPv4 address [David Knox]
  * Description:
  * 	This file contains declarations of utility functions for
  *      Programming Assignment 3.
@@ -13,73 +11,92 @@
  */
 
 #include "util.h"
+//#define UTIL_DEBUG 
 
-int dnslookup(const char* hostname, char* firstIPstr, int maxSize){
-
-    /* Local vars */
-    struct addrinfo* headresult = NULL;
-    struct addrinfo* result = NULL;
-    struct sockaddr_in* ipv4sock = NULL;
-    struct in_addr* ipv4addr = NULL;
-    char ipv4str[INET_ADDRSTRLEN];
-    char ipstr[INET6_ADDRSTRLEN];
+int dnslookup(const char* hostname, char* firstIPstr, int maxSize)
+{
+//   struct addrinfo {
+//                int              ai_flags;
+//                int              ai_family;
+//                int              ai_socktype;
+//                int              ai_protocol;
+//                socklen_t        ai_addrlen;
+//                struct sockaddr *ai_addr;
+//                char            *ai_canonname;
+//                struct addrinfo *ai_next;
+//            };
+    struct addrinfo	*addr = NULL;
+    struct addrinfo *result = NULL;
+	void *in_addr;
+	char ipstr[INET6_ADDRSTRLEN];
     int addrError = 0;
 
-    /* DEBUG: Print Hostname*/
+	firstIPstr[0] = 0;
+
+    addrError = getaddrinfo(hostname, NULL, NULL, &result);
+    if(addrError)
+    {
 #ifdef UTIL_DEBUG
-    fprintf(stderr, "%s\n", hostname);
+		fprintf(stdout, "*** Error looking up Address: %s\n", gai_strerror(addrError));
 #endif
-   
-    /* Lookup Hostname */
-    addrError = getaddrinfo(hostname, NULL, NULL, &headresult);
-    if(addrError){
-	fprintf(stderr, "Error looking up Address: %s\n",
-		gai_strerror(addrError));
-	return UTIL_FAILURE;
-    }
-    /* Loop Through result Linked List */
-    for(result=headresult; result != NULL; result = result->ai_next){
-	/* Extract IP Address and Convert to String */
-	if(result->ai_addr->sa_family == AF_INET){
-	    /* IPv4 Address Handling */
-	    ipv4sock = (struct sockaddr_in*)(result->ai_addr);
-	    ipv4addr = &(ipv4sock->sin_addr);
-	    if(!inet_ntop(result->ai_family, ipv4addr,
-			  ipv4str, sizeof(ipv4str))){
-		perror("Error Converting IP to String");
 		return UTIL_FAILURE;
-	    }
-#ifdef UTIL_DEBUG
-	    fprintf(stdout, "%s\n", ipv4str);
-#endif
-	    strncpy(ipstr, ipv4str, sizeof(ipstr));
-	    ipstr[sizeof(ipstr)-1] = '\0';
-	}
-	else if(result->ai_addr->sa_family == AF_INET6){
-	    /* IPv6 Handling */
-#ifdef UTIL_DEBUG
-	    fprintf(stdout, "IPv6 Address: Not Handled\n");
-#endif
-	    strncpy(ipstr, "UNHANDELED", sizeof(ipstr));
-	    ipstr[sizeof(ipstr)-1] = '\0';
-	}
-	else{
-	    /* Unhandlded Protocol Handling */
-#ifdef UTIL_DEBUG
-	    fprintf(stdout, "Unknown Protocol: Not Handled\n");
-#endif
-	    strncpy(ipstr, "UNHANDELED", sizeof(ipstr));
-	    ipstr[sizeof(ipstr)-1] = '\0';
-	}
-	/* Save First IP Address */
-	if(result==headresult){
-	    strncpy(firstIPstr, ipstr, maxSize);
-	    firstIPstr[maxSize-1] = '\0';
-	}
     }
 
-    /* Cleanup */
-    freeaddrinfo(headresult);
+	for (addr=result ; addr != NULL; addr=addr->ai_next)
+	{
+		if (addr->ai_addr == NULL)
+			continue;
 
-    return UTIL_SUCCESS;
+		switch (addr->ai_addr->sa_family)
+		{
+			case AF_INET:
+			{
+#ifdef UTIL_DEBUG
+		    //	fprintf(stdout, "*** IPv4 Address\n");
+#endif
+				struct sockaddr_in *s4 = (struct sockaddr_in *)addr->ai_addr;
+				in_addr = &s4->sin_addr;
+				break;
+			}
+
+			case AF_INET6:
+			{
+#ifdef UTIL_DEBUG
+		    //	fprintf(stdout, "*** IPv6 Address\n");
+#endif
+			//	struct sockaddr_in6 *s6 = (struct sockaddr_in6 *)addr->ai_addr;
+			//	in_addr = &s6->sin6_addr;
+				in_addr = NULL;
+				break;
+			}
+
+			default:
+				in_addr = NULL;
+				continue;
+		}
+
+		ipstr[0] = 0;
+		
+		if (in_addr != NULL)
+		{
+			if (!inet_ntop(addr->ai_addr->sa_family, in_addr, ipstr, sizeof(ipstr)))
+				printf("*** %s: inet_ntop failed!\n", addr->ai_canonname);
+#ifdef UTIL_DEBUG
+			else
+				printf("*** IP address: %s\n", ipstr);
+#endif
+		}
+		
+		if (strlen(firstIPstr) == 0)
+		{
+#ifdef UTIL_DEBUG
+			printf("*** saving IP address: %s\n", ipstr);
+#endif
+			strncpy(firstIPstr, ipstr, maxSize);
+			firstIPstr[maxSize-1] = '\0';
+		}
+
+	}
+
+	return 0;	
 }

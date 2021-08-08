@@ -1,15 +1,12 @@
 /*
  * File: util.h
- * Author: Andy Sayler
- * Modified: Shiv Mishra
+ * Author: David Knox (based on Andy Sayler original)
  * Project: CSCI 3753 Programming Assignment 3
- * Create Date: 2012/02/01
- * Modify Date: 2012/02/01
- * Modify Date: 2016/09/26
+ * Create Date: 2020/02/28
+ * Modify Date: 2020/02/29  Return the first IPv4 address [David Knox]
  * Description:
  * 	This file contains declarations of utility functions for
  *      Programming Assignment 3.
- *  
  */
 
 #ifndef UTIL_H
