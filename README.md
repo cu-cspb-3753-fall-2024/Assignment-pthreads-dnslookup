@@ -182,9 +182,7 @@ If you are concerned about losing points here, then you should meet with your in
 
 ### I/O Formatting (10 points)
 
-If you do not adhere to the input and output formatting conventions, then you will lose points. You are provided with sample input and output, so there should be no ambiguity on the desired input and output.  If you leave debug print statements uncommented in your submission, then you will lose all 10 of these points. 
-
-If you are concerned about losing points here, you may run a <tt>diff</tt> on your output versus the black-box's output to be sure your output exactly matches (whitespace and all).
+If you do not adhere to the input and output formatting conventions or the specified program argument convention, then you will lose points. You are provided with sample input and output, so there should be no ambiguity on the desired input and output.  If you leave debug print statements uncommented in your submission, then you will lose all 10 of these points. 
 
 ### Design (10 points)
 
