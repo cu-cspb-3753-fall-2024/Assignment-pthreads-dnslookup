@@ -4,7 +4,7 @@ Your task is to design a multithreaded userspace application ``multi-lookup`` th
 
 Each line of each file of the input data must be parsed to extract the domain names. Once a domain name has been extracted, it will need to be resolved. You are provided with source code for a function that can take a domain name and return an IPv4 address of the form ``xxx.xxx.xxx.xxx.``, which you must write to a file.
 
-A naive first approach is to write a serial program of the following form:
+A naive first approach would be to write a serial program of the following form:
 ```
 for each file
   for each line of file
@@ -34,6 +34,7 @@ Once all the lines of all the files have been processed, the `parser` threads wi
 All the status information that needs to be recorded for the `parser` threads will be written to the file name given on the command line. All the status information that needs to be recorded for the `converter` threads will be written to another file name that has also been given on the command line. Just before termination, your program will print (to standard out) the total time that it took to process all the data (time from starting your application until the termination).
 
 ### Program Arguments
+You will lose points if your program does not take its arguments as follows.
 
 ```
 NAME
@@ -61,28 +62,30 @@ DESCRIPTION
                          that are to be resolved.
 ```
 
-### Input: Name Files
+### Data Files
 
-Your application will take as parameters on the command line,  a set of name files to be processed. Each file contains one domain name per line, but may need to be extracted from the other text. As per RFC1035 (https://www.ietf.org/rfc/rfc1035.txt), each domain name is at most 253 characters long. Each name file should be serviced by a single `parser` thread. The number of `parser` threads may be less than, or more than, the number of input files.
+Your application will take as parameters on the command line, a set of name files to be processed. Each file contains one domain name per line. As per RFC1035 (https://www.ietf.org/rfc/rfc1035.txt), each domain name is at most 253 characters long. Initially, you should design your application so that each name file is assigned a single `parser` thread, noting that the number of `parser` threads may be less than, or more than, the number of input name files. This can cause load balancing issues if one of the input name files is substantially larger than the others. To receive full marks you will need to perform better load balancing (see Step 7 of the Checkpoints section).
 
-### Parser Threads
+### Parser Threads and Log
 
-Your application will take a command line argument to specify the number of `parser` threads. These threads service a set of name files, each of which contains a list of domain names. Each name that is extracted from a line in the file is placed into a shared array. If a `parser` thread tries to write to the array but finds that it is full, it should block until a slot opens up in the array. After servicing a name file, a `parser` thread checks if there are any remaining name files to service. If so, it requests one of the remaining name files to process. Once all files have been processed, the thread writes a new line to the parsing log file with its thread id and the number of files it extracted, in the following format:
+Your application will take a command line argument to specify the number of `parser` threads. These threads service a set of name files, each of which contains a list of domain names. Each name that is extracted from a line in the file is placed into a shared bounded buffer. If a `parser` thread tries to write to the array but finds that it is full, it should block until a slot opens up in the array. After servicing a name file, a `parser` thread checks if there are any remaining name files to service. If so, it requests one of the remaining name files to process. Once all files have been processed, the thread writes a new line to the parsing log file with its thread id and the number of files it extracted, in the following format:
 ```
 Thread <thread id> serviced ### files.
 ```
-where `<thread id>` is that thread's process id.  To get the thread id of a thread on Linux systems, use `pthread_self()`.
+where `<thread id>` is that thread's process id. To get the thread id of a thread on Linux systems, use `pthread_self()`.
 
+### Converter Threads and Log
 
-
-### Converter Threads
-
-You will also create a second pool of threads to `converter` process the information provided by the `parser` threads. Each thread in the `converter` thread pool removes a domain name  from the shared array and querys its IP address. After the name has been mapped to an IP address, the result is written to a line in the conversion log file in the following format:
+You will also create a second pool of threads to `converter` process the information provided by the `parser` threads. Each thread in the `converter` thread pool removes a domain name  from the shared buffer and querys its IP address. After the name has been mapped to an IP address, the result is written to a line in the conversion log file in the following format:
 
 ```
-www.google.com, 74.125.224.81
+google.com, 74.125.224.81
 ```
-If a `converter` thread tries to read from the array but finds that it is empty, it should block until there is a new item in the array unless all `parser` threads have terminated.
+If a `converter` thread tries to read from the buffer but finds that it is empty, it should block until there is a new item in the array unless all `parser` threads have terminated.
+
+### The Bounded Buffer
+
+The shared buffer should hold 4096 domain names (approximately 1 MB when full). Consult your data-structures and algorithms notes and think about what abstract data type is most appropriate for a shared bounded buffer.    
 
 ### Synchronization and Deadlock
 
@@ -97,15 +100,15 @@ Your program must end after all names in each file have been serviced by the app
 You must handle the following errors in the following manners:
 
 - **Bogus Domain Name**   
-Given a domain name that cannot be resolved, your program should output a blank string for the IP address, such that the output file continues the domain name, followed by a comma, followed by a line return. You should also print a message to stderr alerting the user to the bogus domain name.
+Given a domain name that cannot be resolved, your program should output a blank string for the IP address, such that the output file continues the domain name, followed by a comma, followed by a line return. You should also print a message to standard error alerting the user to the bogus domain name.
 
 - **Bogus Output File Path**  
-Given a bad output file path, your program should exit and print an appropriate error to stderr.
+Given a bad output file path, your program should exit and print an appropriate error to standard error.
 
 - **Bogus Input File Path**   
-Given a bad input file path, your program should print an appropriate error to stderr and move on to the next file.
+Given a bad input file path, your program should print an appropriate error to standard error and move on to the next file.
 
-All system and library calls should be checked for errors. If you encounter errors not listed above, you should print an appropriate message to stderr, and then either exit or continue, depending upon whether or not you can recover from the error gracefully.
+All system and library calls should be checked for errors. If you encounter errors not listed above, you should print an appropriate message to standard error, and then either exit or continue, depending upon whether or not you can recover from the error gracefully.
 
 ## Provided Code and Data
 
@@ -118,7 +121,7 @@ Some files are included with this assignment for your benefit. You are not requi
 - `results-ref.txt` This result file is a sample output of the IPs for the domain names from the names1.txt file. Note that these results will most likely be different than your results, as IP addresses associated to domain names change and are not in one-to-one correspondence.
 
 ## Checkpoints
-This is a very difficult application to debug.  If you write all the code for the whole application and then attempt to debug it, you will probably not get the assignment completed by the due date. Remember that it becomes exponentially harder to debug a program with multiple different changes at one time.  To ensure your success, we suggest the following steps be undertaken to incrementally develop the application and limit the possible sources of bugs to speed up debugging.
+The cardinal rule of writing multithreaded programs is write the serial version first and then incrementally add more parallelism to your solution, testing along the way. If you write all the code for the whole application and then attempt to debug it, you will most likely fail this assignment. You are strongly encouraged to take the following steps to incrementally develop the application and limit the possible sources of bugs to speed up debugging.
 
 ---
 
@@ -156,15 +159,16 @@ Moving back to the `parsor` threads, each thread must record the data it has pro
 The last step of your implementation is to create a method of handling different numbers of files and parsing threads.  This can be accomplished by creating an API for the parsing threads to access a single line from a file.  This API will abstract the number of files being handled and the mechanism used to manage the files.  The parsing threads only need to request a line from a file and let the API  provide it.  The implementation of the file handling might use a FCFS policy to handle all the lines of one file before going to the next file, or it might use a Round Robin policy that will read the next line from each file before returning to read another line from the first file.
 
 
-## 7. &nbsp;&nbsp;What You Must Provide
+## Submission
 
-To receive full credit, you must submit the following items to Moodle by the due date. Please combine the files into a single zip or tar archive.
+You must combine your files into a single zip archive ``<Lastname>_multi-lookup.zip``. If your name is Jane Doe, then you would submit ``Doe_multi-lookup.zip``. Your zip file must contain the following files:
 
 - `multi-lookup.c` Your program, conforming to the above requirements.
 - `multi-lookup.h` A header file containing prototypes for any function you write as part of your program.
 - `Makefile` A makefile that builds your program as the default target. It should also contain a “clean” target that will remove any files generated during the course of building and/or running your program.
 - `README` A readme describing how to build and run your program.
 
+You will lose 5 points if this file is not named correctly or if there is anything else contained in this zip file, e.g., any folders, input data, output data.
 
 ## Grading
 
@@ -184,7 +188,7 @@ If you are concerned about losing points here, you may run a <tt>diff</tt> on yo
 
 ### Design (10 points)
 
-This assignment is in the C programming language, so we are placing a premium on performance. You will be docked points if you are too cavalier with system resources, or if parts of your implementation are too convoluted or clunky. If there is any unjustified hard-coding, e.g., placing false limits on the sizes of data-structures for processing input data, then you will lose these 10 points, as your program will crash for large enough input. Finally, you will lose some points here if there are any egregious memory leaks. To verify that you do not leak memory, use `valgrind` to test your program. To
+This assignment is in the C programming language, so we are placing a premium on performance. You will be docked points if you are too cavalier with system resources, or if parts of your implementation are too convoluted or clunky. For example, if you have an unbounded or extraordinarily large shared buffer, then you will lose points here. If there is any unjustified hard-coding, e.g., placing false limits on the sizes of data-structures for processing input data, then you will lose these 10 points, as your program will crash for large enough input. Finally, you will lose some points here if there are any egregious memory leaks. To verify that you do not leak memory, use `valgrind` to test your program. To
 install valgrind, use the following command:
 
 ```
@@ -202,30 +206,26 @@ Valgrind should report that you have freed all allocated memory and should not p
 
 If you are concerned about losing points here, then you should meet with your instructor during office hours to see if the part of your solution in question should be redesigned/simplified. 
 
-### Points awarded
-For any points to be awarded for this programming assignment, the criteria below must be met.  Each level assumes all the criteria for previous levels.
+### Correctness (70 points)
 
-- Application must compile and complete processing of given files
-- Application must produce the correct results for given data
-- Application must report that you have freed all allocated memory and do not have any additional warnings or errors from Valgrind.
+The correctness of your program will account for the majority of your grade. To ensure that you maximize this score, you should develop your code with respect to the checkpoints (Steps 1-7) outlined above. 
 
-#### ** up to 60 points (thru step 3)
-- must read and process the parameters
-- must create parsing thread to read lines from a file
-- must create conversion thread to take domain name and find IP address
-- must communicate between threads using a shared buffer that is protected by a mutex
+#### Step 1 (10 points) 
 
-#### ** up to 80 points (thru step 5)
-- must use multiple parsing threads as specified on command line
-- must use multiple conversion threads as specified on command line
-- must use a mutex to protect the final results file
+#### Step 2 (20 points) 
 
-#### ** upto 100 points (thru step 6)
-- must write the progress of the parsing threads to a shared file (protected by a mutex)
-- must handle more files than the number of parsing threads
+#### Step 3 (30 points) 
 
-- **Multiple IP Addresses**   
-Many domain names return more than a single IP address. Add support for listing an arbitrary number of addresses to your program.  You may find it necessary to modify code in the util.h and util.c files to add this functionality. If you do this, please maintain backwards compatibility with the existing `util.h` functions. This is most easily done by adding new function instead of modifying the existing ones.   These addresses should be printed to the output file as additional comma-separated strings after the domain name.
+#### Step 4 (40 points) 
+
+#### Step 5 (55 points)
+
+#### Step 6 (65 points)
+
+#### Step 7 (70 points)
+
+#### Bonus (5 pts) 
+Many domain names return more than a single IP address. Add support for listing an arbitrary number of addresses to your program.  You may find it necessary to modify code in the util.h and util.c files to add this functionality. If you do this, please maintain backwards compatibility with the existing `util.h` functions. This is most easily done by adding new functions instead of modifying the existing ones. These addresses should be printed to the output file as additional comma-separated strings after the domain name.
 
 ```
                 www.google.com, 74.125.224.81, 76.125.232.80, 75.125.211.70
