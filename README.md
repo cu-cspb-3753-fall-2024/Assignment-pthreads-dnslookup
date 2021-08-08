@@ -206,7 +206,7 @@ If you are concerned about losing points here, then you should meet with your in
 
 ### Correctness (70 points)
 
-The correctness of your program will account for the majority of your grade. To ensure that you maximize this score, you should develop your code with respect to the checkpoints (Steps 1-7) outlined above. 
+The correctness of your program will account for the majority of your grade. To ensure that you maximize this score, you should develop your code with respect to the checkpoints (Steps 1-7) outlined above. The following lists how many points will be awarded upon completing each step.
 
 #### Step 1 (10 points) 
 
