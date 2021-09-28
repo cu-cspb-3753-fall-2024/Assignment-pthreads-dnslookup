@@ -126,36 +126,43 @@ The cardinal rule of writing multithreaded programs is write the serial version 
 ---
 
 <img src="images/Step1.png" width="600">
+
 Create a simple program to create a parsing thread that will repeatedly read a line from a given file and add an entry into the shared buffer.  You will need to validate that the buffer has the correct number of entries.
 
 ---
 
 <img src="images/Step2.png" width="600">
+
 The next step is to use the parsing thread to create a number of entries in the buffer.  Once that process is complete, start a conversion thread to take items out of the buffer.  You can write the results to the output files.
 
 ---
 
 <img src="images/Step3.png" width="600">
+
 Once you are assured that your application can write and read to the buffer correctly (although serially), then try to make them run concurrently.  Multiple processes accessing and modifying the same data can cause race conditions.  You must protect the critical sections of each thread  with a mutex.
 
 ---
 
 <img src="images/Step4.png" width="600">
+
 We can now run with a single `parsor` and a single `converter` passing information via a shared buffer that is protected by a mutex.  The next step is to create multiple `parsor` threads to read from multiple different files.  Each `parsor` can read single lines from a different file.  The `parsor` will terminate when all lines from the file have been  processed.
 
 ---
 
 <img src="images/Step5.png" width="600">
+
 The next step will create multiple `converter` threads to read from multiple `parsor` threads via a single shared buffer.  The `converter` will wait for data (spin wait is acceptable) but will terminate if there are no active `parsor` and the buffer is empty.  
 
 ---
 
 <img src="images/Step6.png" width="600">
+
 Moving back to the `parsor` threads, each thread must record the data it has processed.  Files are a shared resource and therefore must be protected from multiple processes accessing it.
 
 ---
 
 <img src="images/Step7.png" width="600">
+
 The last step of your implementation is to create a method of handling different numbers of files and parsing threads.  This can be accomplished by creating an API for the parsing threads to access a single line from a file.  This API will abstract the number of files being handled and the mechanism used to manage the files.  The parsing threads only need to request a line from a file and let the API  provide it.  The implementation of the file handling might use a FCFS policy to handle all the lines of one file before going to the next file, or it might use a Round Robin policy that will read the next line from each file before returning to read another line from the first file.
 
 
